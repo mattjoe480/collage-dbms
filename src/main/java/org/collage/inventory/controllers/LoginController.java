@@ -66,7 +66,8 @@ public class LoginController {
             try {
                 login();
             }catch (Exception e) {
-                e.printStackTrace();
+                System.out.println(e.getMessage());
+                System.out.println("Cannot login");
             }
 
         }
