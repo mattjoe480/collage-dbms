@@ -1,0 +1,98 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.javamodularity.moduleplugin' version '1.8.12'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'org.beryx.jlink' version '2.25.0'
+    id 'com.gradleup.shadow' version '8.3.3'
+    id 'edu.sc.seis.launch4j' version '3.0.6'
+
+}
+def currentOS = DefaultNativePlatform.currentOperatingSystem
+group 'org.collage'
+version '1.0-SNAPSHOT'
+
+//java {
+//    targetCompatibility = JavaVersion.VERSION_22
+//    sourceCompatibility = JavaVersion.VERSION_22
+//}
+
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    junitVersion = '5.11.2'
+}
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'org.collage.inventory'
+    mainClass = 'org.collage.inventory.Application'
+}
+launch4j {
+    mainClassName = 'org.collage.inventory.Application'
+}
+
+javafx {
+    version = '19.0.2'
+    configuration = 'implementation'
+    modules = ['javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.media']
+}
+
+
+dependencies {
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    implementation 'mysql:mysql-connector-java:8.0.33'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jlink {
+    imageZip = project.file("${buildDir}/distributions/app-${javafx.platform.classifier}.zip")
+    options = ['--strip-debug', '--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'app'
+    }
+    if (currentOS.isWindows()) {
+        jpackage {
+            installerType = 'msi'
+            installerOptions = [
+                    '--win-menu',
+                    '--win-menu-group', 'CodeDead',
+                    '--win-shortcut-prompt',
+                    '--win-upgrade-uuid', '876c5464-9a66-4913-89a4-c63a4b8b4bb9',
+                    '--win-help-url', 'https://codedead.com/contact',
+                    '--win-dir-chooser',
+                    '--copyright', 'Copyright (c) 2024 CodeDead',
+                    '--description', 'Opal is a free and open-source JavaFX application that can play relaxing music in the background',
+                    '--vendor', 'CodeDead',
+                    '--license-file', 'LICENSE',
+                    '--app-version', "${project.version.toString()}",
+                    '--about-url', 'https://codedead.com'
+            ]
+        }
+    }
+}
+
+jlinkZip {
+    group = 'distribution'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'org.collage.inventory.Application',
+        )
+    }
+}
